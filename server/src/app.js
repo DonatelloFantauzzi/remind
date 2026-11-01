@@ -1,18 +1,13 @@
-// 1. Importa express
 import express from "express";
+import pool from "./db/pool.js";
 
-// 2. Crea l'app
 const app = express();
 
-// 3. Middleware globali
-//    Per ora uno solo: quello che legge il corpo JSON delle richieste
 app.use(express.json());
 
-// 4. Route di prova: GET /api/health
-//    Risponde con un JSON tipo { status: "ok" }
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+app.get("/api/health", async (req, res) => {
+  const result = await pool.query("SELECT now()");
+  res.status(200).json({ status: "ok", database: result.rows[0].now });
 });
 
-// 5. Esporta l'app (export default), così index.js può accenderla
 export default app;
