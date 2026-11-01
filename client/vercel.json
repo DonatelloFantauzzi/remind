@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:percorso*",
+      "destination": "https://remind-api.onrender.com/api/:percorso*"
+    }
+  ]
+}
