@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+@theme {
+  /* Neutri: sfondi, bordi, testo */
+  --color-canvas: #0b0b14; /* sfondo di tutta l'app */
+  --color-surface: #141424; /* sidebar e pannelli */
+  --color-elevated: #1d1d33; /* card, hover, elementi sopra i pannelli */
+  --color-line: #2a2a45; /* bordi e separatori */
+  --color-fg: #e6e6f0; /* testo principale */
+  --color-muted: #9494b0; /* testo secondario */
+
+  /* Marchio */
+  --color-primary: #7c3aed; /* viola: pulsanti principali, nodo selezionato */
+  --color-secondary: #3d7bff; /* blu elettrico: link, focus, elemento attivo nella sidebar */
+  --color-accent: #22d3ee; /* ciano: citazioni, passaggi evidenziati, timeline */
+
+  /* Stati */
+  --color-success: #34d399; /* "Pronto" */
+  --color-danger: #f43f5e; /* file falliti, errori */
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+  }
+}
