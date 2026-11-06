@@ -2,7 +2,8 @@
 // Gli errori lanciati dal service arrivano da soli a errorHandler (Express 5).
 
 import express from "express";
-import { register } from "./auth.service.js";
+import { register, login } from "./auth.service.js";
+import config from "../../config.js";
 
 const routerAuth = express.Router();
 
@@ -45,6 +46,31 @@ routerAuth.post("/register", async (req, res) => {
 
   const user = await register(email, password, name);
   return res.status(201).json({ user });
+});
+
+routerAuth.post("/login", async (req, res) => {
+  const { email, password } = req.body ?? {};
+
+  if (
+    !email ||
+    typeof email !== "string" ||
+    !password ||
+    typeof password !== "string"
+  ) {
+    return res.status(400).json({ error: "Credenziali non valide" });
+  }
+
+  const { user, token } = await login(email, password);
+
+  const options = {
+    httpOnly: true,
+    secure: config.isProduction,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+
+  res.cookie("token", token, options);
+  return res.status(200).json({ user });
 });
 
 export default routerAuth;
