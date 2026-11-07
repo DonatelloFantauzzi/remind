@@ -2,8 +2,9 @@
 // Gli errori lanciati dal service arrivano da soli a errorHandler (Express 5).
 
 import express from "express";
-import { register, login } from "./auth.service.js";
+import { register, login, getMe } from "./auth.service.js";
 import config from "../../config.js";
+import requireAuth from "../../middleware/requireAuth.js";
 
 const routerAuth = express.Router();
 
@@ -70,6 +71,12 @@ routerAuth.post("/login", async (req, res) => {
   };
 
   res.cookie("token", token, options);
+  return res.status(200).json({ user });
+});
+
+routerAuth.get("/me", requireAuth, async (req, res) => {
+  const userId = req.userId;
+  const user = await getMe(userId);
   return res.status(200).json({ user });
 });
 
