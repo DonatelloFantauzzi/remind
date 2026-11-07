@@ -4,7 +4,7 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import config from "../../config.js";
-import { findUserByEmail, createUser } from "./auth.queries.js";
+import { findUserByEmail, createUser, findUserById } from "./auth.queries.js";
 
 // Registrazione: crea un utente e lo restituisce, senza password_hash.
 export async function register(email, password, name) {
@@ -57,4 +57,14 @@ export async function login(email, password) {
   // 7. Restituisci un oggetto con l'utente pulito e il token.
   const userLogged = { user: userProfile, token };
   return userLogged;
+}
+
+export async function getMe(userId) {
+  const user = await findUserById(userId);
+  if (!user) {
+    const error = new Error("Non autenticato");
+    error.status = 401;
+    throw error;
+  }
+  return user;
 }
