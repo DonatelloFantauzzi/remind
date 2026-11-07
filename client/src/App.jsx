@@ -1,23 +1,17 @@
-import { useEffect, useState } from "react";
+import { Navigate, Route, Routes } from "react-router";
+import LandingPage from "./features/landing/LandingPage";
+import LoginPage from "./features/auth/LoginPage";
+import RegisterPage from "./features/auth/RegisterPage";
 
 function App() {
-  const [dati, setDati] = useState(null);
-
-  useEffect(() => {
-    const handleDati = async () => {
-      const response = await fetch("/api/health");
-      const data = await response.json();
-      console.log(data);
-      setDati(data);
-      console.log(dati);
-    };
-    handleDati();
-  }, []);
-
   return (
     <>
-      <section className="text-3xl font-bold">Ciao dal client</section>
-      <p>{dati?.status}</p>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   );
 }
