@@ -8,6 +8,12 @@ import requireAuth from "../../middleware/requireAuth.js";
 
 const routerAuth = express.Router();
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: config.isProduction,
+  sameSite: "lax",
+};
+
 routerAuth.post("/register", async (req, res) => {
   const { email, password, name } = req.body ?? {};
 
@@ -63,15 +69,18 @@ routerAuth.post("/login", async (req, res) => {
 
   const { user, token } = await login(email, password);
 
-  const options = {
-    httpOnly: true,
-    secure: config.isProduction,
-    sameSite: "lax",
+  const loginCookieOptions = {
+    ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
-  res.cookie("token", token, options);
+  res.cookie("token", token, loginCookieOptions);
   return res.status(200).json({ user });
+});
+
+routerAuth.post("/logout", (req, res) => {
+  res.clearCookie("token", cookieOptions);
+  return res.sendStatus(204);
 });
 
 routerAuth.get("/me", requireAuth, async (req, res) => {
