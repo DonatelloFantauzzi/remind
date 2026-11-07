@@ -21,3 +21,16 @@ export async function createUser(email, passwordHash, name) {
   );
   return result.rows[0];
 }
+
+export async function findUserById(id) {
+  const result = await pool.query(
+    "SELECT id, email, name, avatar_url, created_at FROM users WHERE id = $1",
+    [id],
+  );
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  return result.rows[0];
+}
