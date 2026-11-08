@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useAuthStore } from "./authStore";
 import request from "../../api/client";
 
@@ -10,7 +10,6 @@ export default function RegisterPage() {
   const [error, setError] = useState(null);
 
   const login = useAuthStore((state) => state.login);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +25,6 @@ export default function RegisterPage() {
       setError(err.message);
       return;
     }
-    navigate("/");
   };
 
   return (
