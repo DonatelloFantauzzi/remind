@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import request from "../../api/client.js";
 
-// --- lo store ---
-
 export const useAuthStore = create((set) => ({
   user: null,
   checked: false,
