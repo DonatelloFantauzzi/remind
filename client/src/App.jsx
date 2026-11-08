@@ -7,6 +7,7 @@ import RegisterPage from "./features/auth/RegisterPage";
 import ProtectedRoute from "./features/auth/ProtectedRoute";
 import GraphPage from "./features/graph/GraphPage";
 import GuestRoute from "./features/auth/GuestRoute";
+import AppLayout from "./layout/AppLayout";
 
 function App() {
   const checkSession = useAuthStore((state) => state.checkSession);
@@ -22,7 +23,9 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
       </Route>
       <Route element={<ProtectedRoute />}>
-        <Route path="/graph" element={<GraphPage />} />
+        <Route element={<AppLayout />}>
+          <Route path="/graph" element={<GraphPage />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
