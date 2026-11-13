@@ -1,6 +1,6 @@
 // client/src/features/auth/LoginPage.jsx
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useAuthStore } from "./authStore";
 
 function LoginPage() {
@@ -8,9 +8,14 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [searchParams] = useSearchParams();
 
   const login = useAuthStore((state) => state.login);
 
+  const googleErrorMessage =
+    searchParams.get("error") === "google"
+      ? "Accesso con Google non riuscito"
+      : null;
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -30,9 +35,25 @@ function LoginPage() {
           Entra nel tuo spazio di appunti.
         </p>
 
-        {/* fase 2, passo 6: qui arrivano i pulsanti Google e GitHub */}
+        <div className="mt-8 flex flex-col gap-3">
+          <a
+            href="/api/auth/google"
+            className="flex items-center justify-center rounded-lg border border-line bg-surface px-4 py-2.5 font-medium text-fg hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+          >
+            Continua con Google
+          </a>
+          {/* qui arriverà GitHub */}
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+        <div className="mt-6 flex items-center gap-3">
+          <span className="h-px flex-1 bg-line" />
+          <span className="text-xs uppercase tracking-wide text-muted">
+            oppure
+          </span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label htmlFor="email" className="text-sm font-medium text-fg">
               Email
@@ -66,12 +87,12 @@ function LoginPage() {
             />
           </div>
 
-          {error && (
+          {(error || googleErrorMessage) && (
             <p
               role="alert"
               className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
             >
-              {error}
+              {error || googleErrorMessage}
             </p>
           )}
 

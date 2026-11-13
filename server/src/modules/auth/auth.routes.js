@@ -2,7 +2,14 @@
 // Gli errori lanciati dal service arrivano da soli a errorHandler (Express 5).
 
 import express from "express";
-import { register, login, getMe } from "./auth.service.js";
+import {
+  register,
+  login,
+  getMe,
+  getGoogleAuthUrl,
+  googleLogin,
+} from "./auth.service.js";
+import { randomBytes } from "crypto";
 import config from "../../config.js";
 import requireAuth from "../../middleware/requireAuth.js";
 
@@ -12,6 +19,11 @@ const cookieOptions = {
   httpOnly: true,
   secure: config.isProduction,
   sameSite: "lax",
+};
+
+const tokenCookieOptions = {
+  ...cookieOptions,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 routerAuth.post("/register", async (req, res) => {
@@ -69,12 +81,7 @@ routerAuth.post("/login", async (req, res) => {
 
   const { user, token } = await login(email, password);
 
-  const loginCookieOptions = {
-    ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
-  res.cookie("token", token, loginCookieOptions);
+  res.cookie("token", token, tokenCookieOptions);
   return res.status(200).json({ user });
 });
 
@@ -87,6 +94,38 @@ routerAuth.get("/me", requireAuth, async (req, res) => {
   const userId = req.userId;
   const user = await getMe(userId);
   return res.status(200).json({ user });
+});
+
+routerAuth.get("/google", (req, res) => {
+  const state = randomBytes(16).toString("hex");
+  const stateCookieOptions = {
+    ...cookieOptions,
+    maxAge: 10 * 60 * 1000,
+  };
+
+  res.cookie("oauth_state", state, stateCookieOptions);
+  res.redirect(getGoogleAuthUrl(state));
+});
+
+routerAuth.get("/google/callback", async (req, res) => {
+  const { code, state, error } = req.query;
+  const oauthState = req.cookies.oauth_state;
+  res.clearCookie("oauth_state", cookieOptions);
+  if (!code || !oauthState || error || state !== oauthState) {
+    return res.redirect("/login?error=google");
+  }
+  let loginResult;
+
+  try {
+    loginResult = await googleLogin(code);
+  } catch (err) {
+    console.error(err);
+    return res.redirect("/login?error=google");
+  }
+  const { user, token } = loginResult;
+  res.cookie("token", token, tokenCookieOptions);
+
+  return res.redirect("/graph");
 });
 
 export default routerAuth;

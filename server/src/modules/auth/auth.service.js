@@ -4,7 +4,17 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import config from "../../config.js";
-import { findUserByEmail, createUser, findUserById } from "./auth.queries.js";
+import {
+  findUserByEmail,
+  createUser,
+  findUserById,
+  findOAuthAccount,
+  createOAuthAccount,
+} from "./auth.queries.js";
+
+const googleBaseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+const googleTokenUrl = "https://oauth2.googleapis.com/token";
+const googleRedirectUri = `${config.appUrl}/api/auth/google/callback`;
 
 // Registrazione: crea un utente e lo restituisce, senza password_hash.
 export async function register(email, password, name) {
@@ -67,4 +77,82 @@ export async function getMe(userId) {
     throw error;
   }
   return user;
+}
+
+export function getGoogleAuthUrl(state) {
+  const googleParams = new URLSearchParams({
+    client_id: config.googleClientId,
+    redirect_uri: googleRedirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state: state,
+  });
+
+  const googleOauthUrl = `${googleBaseUrl}?${googleParams}`;
+
+  return googleOauthUrl;
+}
+
+export async function googleLogin(code) {
+  const tokenParams = new URLSearchParams({
+    client_id: config.googleClientId,
+    redirect_uri: googleRedirectUri,
+    grant_type: "authorization_code",
+    client_secret: config.googleClientSecret,
+    code,
+  });
+
+  const response = await fetch(googleTokenUrl, {
+    method: "POST",
+    body: tokenParams,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error(data);
+    const error = new Error("Accesso con Google non riuscito");
+    error.status = 401;
+    throw error;
+  }
+
+  const googleProfile = jwt.decode(data.id_token);
+
+  if (!googleProfile.email_verified) {
+    const error = new Error("Accesso con Google non riuscito");
+    error.status = 401;
+    throw error;
+  }
+
+  const normalizedEmail = googleProfile.email.trim().toLowerCase();
+  let userId;
+
+  const oauthAccount = await findOAuthAccount("google", googleProfile.sub);
+
+  if (oauthAccount) {
+    userId = oauthAccount.user_id;
+  } else {
+    const existingUser = await findUserByEmail(normalizedEmail);
+    if (existingUser) {
+      userId = existingUser.id;
+      await createOAuthAccount("google", userId, googleProfile.sub);
+    } else {
+      const newUser = await createUser(
+        normalizedEmail,
+        null,
+        googleProfile.name,
+        googleProfile.picture,
+      );
+
+      userId = newUser.id;
+      await createOAuthAccount("google", userId, googleProfile.sub);
+    }
+  }
+
+  const user = await findUserById(userId);
+  const payload = { sub: user.id };
+  const secretKey = config.jwtSecret;
+  const token = jwt.sign(payload, secretKey, { expiresIn: "7d" });
+
+  return { user, token };
 }
