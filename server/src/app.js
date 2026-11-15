@@ -26,14 +26,6 @@ app.get("/api/health", async (req, res) => {
   res.status(200).json({ status: "ok", database: result.rows[0].now });
 });
 
-app.get("/api/debug/ip", (req, res) => {
-  res.status(200).json({
-    socket: req.socket.remoteAddress,
-    forwardedFor: req.headers["x-forwarded-for"],
-    ip: req.ip,
-  });
-});
-
 app.use(notFound);
 
 app.use(errorHandler);
