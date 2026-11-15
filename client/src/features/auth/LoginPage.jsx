@@ -3,6 +3,11 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuthStore } from "./authStore";
 
+const oauthErrorMessages = {
+  google: "Accesso con Google non riuscito",
+  github: "Accesso con GitHub non riuscito",
+};
+
 function LoginPage() {
   // la logica è tua: stato dei campi, errore, invio
   const [email, setEmail] = useState("");
@@ -12,10 +17,8 @@ function LoginPage() {
 
   const login = useAuthStore((state) => state.login);
 
-  const googleErrorMessage =
-    searchParams.get("error") === "google"
-      ? "Accesso con Google non riuscito"
-      : null;
+  const oauthErrorMessage = oauthErrorMessages[searchParams.get("error")];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -38,11 +41,19 @@ function LoginPage() {
         <div className="mt-8 flex flex-col gap-3">
           <a
             href="/api/auth/google"
-            className="flex items-center justify-center rounded-lg border border-line bg-surface px-4 py-2.5 font-medium text-fg hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium text-fg transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
           >
+            <img src="/google.svg" alt="" className="h-7 w-7" />
             Continua con Google
           </a>
-          {/* qui arriverà GitHub */}
+
+          <a
+            href="/api/auth/github"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium text-fg transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+          >
+            <img src="/github.svg" alt="" className="h-7 w-7" />
+            Continua con GitHub
+          </a>
         </div>
 
         <div className="mt-6 flex items-center gap-3">
@@ -87,12 +98,12 @@ function LoginPage() {
             />
           </div>
 
-          {(error || googleErrorMessage) && (
+          {(error || oauthErrorMessage) && (
             <p
               role="alert"
               className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
             >
-              {error || googleErrorMessage}
+              {error || oauthErrorMessage}
             </p>
           )}
 

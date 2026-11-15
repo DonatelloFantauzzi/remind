@@ -16,6 +16,12 @@ const googleBaseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
 const googleTokenUrl = "https://oauth2.googleapis.com/token";
 const googleRedirectUri = `${config.appUrl}/api/auth/google/callback`;
 
+const githubBaseUrl = "https://github.com/login/oauth/authorize";
+const githubRedirectUri = `${config.appUrl}/api/auth/github/callback`;
+const githubTokenUrl = "https://github.com/login/oauth/access_token";
+const githubUserUrl = "https://api.github.com/user";
+const githubUserEmail = "https://api.github.com/user/emails";
+
 // Registrazione: crea un utente e lo restituisce, senza password_hash.
 export async function register(email, password, name) {
   // 1. Normalizza l'email: minuscolo e senza spazi ai lati.
@@ -146,6 +152,117 @@ export async function googleLogin(code) {
 
       userId = newUser.id;
       await createOAuthAccount("google", userId, googleProfile.sub);
+    }
+  }
+
+  const user = await findUserById(userId);
+  const payload = { sub: user.id };
+  const secretKey = config.jwtSecret;
+  const token = jwt.sign(payload, secretKey, { expiresIn: "7d" });
+
+  return { user, token };
+}
+
+export function getGithubAuthUrl(state) {
+  const githubParams = new URLSearchParams({
+    client_id: config.githubClientId,
+    redirect_uri: githubRedirectUri,
+    scope: "user:email",
+    state: state,
+  });
+
+  const githubOauthUrl = `${githubBaseUrl}?${githubParams}`;
+  return githubOauthUrl;
+}
+
+export async function githubLogin(code) {
+  const tokenParams = new URLSearchParams({
+    client_id: config.githubClientId,
+    client_secret: config.githubClientSecret,
+    redirect_uri: githubRedirectUri,
+    code,
+  });
+
+  const response = await fetch(githubTokenUrl, {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body: tokenParams,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || data.error) {
+    console.error(data);
+    const error = new Error("Accesso con GitHub non riuscito");
+    error.status = 401;
+    throw error;
+  }
+
+  const userResponse = await fetch(githubUserUrl, {
+    headers: {
+      Authorization: `Bearer ${data.access_token}`,
+      Accept: "application/vnd.github+json",
+    },
+  });
+
+  const userData = await userResponse.json();
+
+  if (!userResponse.ok) {
+    console.error(userData);
+    const error = new Error("Accesso con GitHub non riuscito");
+    error.status = 401;
+    throw error;
+  }
+
+  const emailResponse = await fetch(githubUserEmail, {
+    headers: {
+      Authorization: `Bearer ${data.access_token}`,
+      Accept: "application/vnd.github+json",
+    },
+  });
+
+  const emailData = await emailResponse.json();
+
+  if (!emailResponse.ok) {
+    console.error(emailData);
+    const error = new Error("Accesso con GitHub non riuscito");
+    error.status = 401;
+    throw error;
+  }
+
+  const primaryEmail = emailData.find(
+    (email) => email.primary === true && email.verified === true,
+  );
+
+  if (!primaryEmail) {
+    const error = new Error("Accesso con GitHub non riuscito");
+    error.status = 401;
+    throw error;
+  }
+
+  const normalizedEmail = primaryEmail.email.trim().toLowerCase();
+
+  const oauthAccount = await findOAuthAccount("github", userData.id.toString());
+  let userId;
+
+  if (oauthAccount) {
+    userId = oauthAccount.user_id;
+  } else {
+    const existingUser = await findUserByEmail(normalizedEmail);
+    if (existingUser) {
+      userId = existingUser.id;
+      await createOAuthAccount("github", userId, userData.id.toString());
+    } else {
+      const name = userData.name || userData.login;
+      const newUser = await createUser(
+        normalizedEmail,
+        null,
+        name,
+        userData.avatar_url,
+      );
+
+      userId = newUser.id;
+      await createOAuthAccount("github", userId, userData.id.toString());
     }
   }
 

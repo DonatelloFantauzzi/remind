@@ -5,6 +5,8 @@ const config = {
   isProduction: process.env.NODE_ENV === "production",
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  githubClientId: process.env.GITHUB_CLIENT_ID,
+  githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
   appUrl: process.env.APP_URL,
 };
 
@@ -26,6 +28,14 @@ if (!config.googleClientSecret) {
 
 if (!config.appUrl) {
   throw new Error("APP_URL mancante");
+}
+
+if (!config.githubClientId) {
+  throw new Error("GITHUB_CLIENT_ID mancante");
+}
+
+if (!config.githubClientSecret) {
+  throw new Error("GITHUB_CLIENT_SECRET mancante");
 }
 
 export default config;

@@ -35,11 +35,19 @@ export default function RegisterPage() {
         <div className="mt-8 flex flex-col gap-3">
           <a
             href="/api/auth/google"
-            className="flex items-center justify-center rounded-lg border border-line bg-surface px-4 py-2.5 font-medium text-fg hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium text-fg transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
           >
+            <img src="/google.svg" alt="" className="h-7 w-7" />
             Continua con Google
           </a>
-          {/* qui arriverà GitHub */}
+
+          <a
+            href="/api/auth/github"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium text-fg transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+          >
+            <img src="/github.svg" alt="" className="h-7 w-7" />
+            Continua con GitHub
+          </a>
         </div>
 
         <div className="mt-6 flex items-center gap-3">

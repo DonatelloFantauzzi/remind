@@ -8,6 +8,8 @@ import {
   getMe,
   getGoogleAuthUrl,
   googleLogin,
+  getGithubAuthUrl,
+  githubLogin,
 } from "./auth.service.js";
 import { randomBytes } from "crypto";
 import config from "../../config.js";
@@ -24,6 +26,11 @@ const cookieOptions = {
 const tokenCookieOptions = {
   ...cookieOptions,
   maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const stateCookieOptions = {
+  ...cookieOptions,
+  maxAge: 10 * 60 * 1000,
 };
 
 routerAuth.post("/register", async (req, res) => {
@@ -98,10 +105,6 @@ routerAuth.get("/me", requireAuth, async (req, res) => {
 
 routerAuth.get("/google", (req, res) => {
   const state = randomBytes(16).toString("hex");
-  const stateCookieOptions = {
-    ...cookieOptions,
-    maxAge: 10 * 60 * 1000,
-  };
 
   res.cookie("oauth_state", state, stateCookieOptions);
   res.redirect(getGoogleAuthUrl(state));
@@ -122,10 +125,38 @@ routerAuth.get("/google/callback", async (req, res) => {
     console.error(err);
     return res.redirect("/login?error=google");
   }
-  const { user, token } = loginResult;
+  const { token } = loginResult;
   res.cookie("token", token, tokenCookieOptions);
 
   return res.redirect("/graph");
+});
+
+routerAuth.get("/github", (req, res) => {
+  const state = randomBytes(16).toString("hex");
+
+  res.cookie("oauth_state", state, stateCookieOptions);
+  res.redirect(getGithubAuthUrl(state));
+});
+
+routerAuth.get("/github/callback", async (req, res) => {
+  const { code, state, error } = req.query;
+  const oauthState = req.cookies.oauth_state;
+  res.clearCookie("oauth_state", cookieOptions);
+  if (!code || !oauthState || error || state !== oauthState) {
+    return res.redirect("/login?error=github");
+  }
+
+  let loginResult;
+  try {
+    loginResult = await githubLogin(code);
+  } catch (err) {
+    console.error(err);
+    return res.redirect("/login?error=github");
+  }
+
+  const { token } = loginResult;
+  res.cookie("token", token, tokenCookieOptions);
+  res.redirect("/graph");
 });
 
 export default routerAuth;
