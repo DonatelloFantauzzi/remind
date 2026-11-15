@@ -14,6 +14,7 @@ import {
 import { randomBytes } from "crypto";
 import config from "../../config.js";
 import requireAuth from "../../middleware/requireAuth.js";
+import { loginLimiter, registerLimiter } from "../../middleware/rateLimit.js";
 
 const routerAuth = express.Router();
 
@@ -33,7 +34,7 @@ const stateCookieOptions = {
   maxAge: 10 * 60 * 1000,
 };
 
-routerAuth.post("/register", async (req, res) => {
+routerAuth.post("/register", registerLimiter, async (req, res) => {
   const { email, password, name } = req.body ?? {};
 
   if (!email) {
@@ -74,7 +75,7 @@ routerAuth.post("/register", async (req, res) => {
   return res.status(201).json({ user });
 });
 
-routerAuth.post("/login", async (req, res) => {
+routerAuth.post("/login", loginLimiter, async (req, res) => {
   const { email, password } = req.body ?? {};
 
   if (
