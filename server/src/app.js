@@ -4,6 +4,7 @@ import pool from "./db/pool.js";
 import errorHandler from "./middleware/errorHandler.js";
 import routerAuth from "./modules/auth/auth.routes.js";
 import notFound from "./middleware/notFound.js";
+import routerDocuments from "./modules/documents/documents.routes.js";
 
 const app = express();
 
@@ -20,6 +21,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", routerAuth);
+
+app.use("/api/documents", routerDocuments);
 
 app.get("/api/health", async (req, res) => {
   const result = await pool.query("SELECT now()");
