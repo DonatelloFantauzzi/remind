@@ -22,10 +22,19 @@ const githubTokenUrl = "https://github.com/login/oauth/access_token";
 const githubUserUrl = "https://api.github.com/user";
 const githubUserEmail = "https://api.github.com/user/emails";
 
+function assertEmailAllowed(email) {
+  if (config.allowedEmails && !config.allowedEmails.includes(email)) {
+    const error = new Error("Accesso non consentito");
+    error.status = 403;
+    throw error;
+  }
+}
+
 // Registrazione: crea un utente e lo restituisce, senza password_hash.
 export async function register(email, password, name) {
   // 1. Normalizza l'email: minuscolo e senza spazi ai lati.
   const normalizedEmail = email.trim().toLowerCase();
+  assertEmailAllowed(normalizedEmail);
   // 2. Cerca se esiste già un utente con quell'email.
   //    Se esiste: lancia un errore con status 409 e un messaggio chiaro.
   const user = await findUserByEmail(normalizedEmail);
@@ -46,6 +55,7 @@ export async function register(email, password, name) {
 export async function login(email, password) {
   // 1. Normalizza l'email, come nella registrazione.
   const normalizedEmail = email.trim().toLowerCase();
+  assertEmailAllowed(normalizedEmail);
   // 2. Cerca l'utente per email.
   const user = await findUserByEmail(normalizedEmail);
   // 3. Se l'utente non c'è, oppure non ha password_hash (entra solo con Google o GitHub):
@@ -131,6 +141,7 @@ export async function googleLogin(code) {
   }
 
   const normalizedEmail = googleProfile.email.trim().toLowerCase();
+  assertEmailAllowed(normalizedEmail);
   let userId;
 
   const oauthAccount = await findOAuthAccount("google", googleProfile.sub);
@@ -241,6 +252,7 @@ export async function githubLogin(code) {
   }
 
   const normalizedEmail = primaryEmail.email.trim().toLowerCase();
+  assertEmailAllowed(normalizedEmail);
 
   const oauthAccount = await findOAuthAccount("github", userData.id.toString());
   let userId;

@@ -1,3 +1,12 @@
+let allowedEmails;
+if (process.env.ALLOWED_EMAILS) {
+  allowedEmails = process.env.ALLOWED_EMAILS.split(",").map((email) =>
+    email.trim().toLowerCase(),
+  );
+} else {
+  allowedEmails = null;
+}
+
 const config = {
   databaseUrl: process.env.DATABASE_URL,
   port: process.env.PORT || 3000,
@@ -8,6 +17,7 @@ const config = {
   githubClientId: process.env.GITHUB_CLIENT_ID,
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
   appUrl: process.env.APP_URL,
+  allowedEmails,
 };
 
 if (!config.databaseUrl) {
