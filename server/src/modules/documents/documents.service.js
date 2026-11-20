@@ -17,6 +17,12 @@ export async function uploadDocument(userId, file) {
 
   // 2. estrazione del testo
   const text = await extractText(buffer, originalname);
+
+  if (!text.trim()) {
+    const error = new Error("Il file non contiene testo leggibile");
+    error.status = 422;
+    throw error;
+  }
   // 3. documento + job in transazione
 
   const client = await pool.connect();
