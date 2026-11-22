@@ -34,3 +34,16 @@ export async function failJob(jobId, message) {
     [message, jobId],
   );
 }
+
+export async function findJobById(jobId, userId) {
+  const result = await pool.query(
+    "SELECT status, progress, step, error_message FROM jobs WHERE id=$1 AND user_id=$2",
+    [jobId, userId],
+  );
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  return result.rows[0];
+}

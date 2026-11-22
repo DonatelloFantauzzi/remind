@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { extractText } from "./extract.js";
 import pool from "../../db/pool.js";
 import { createDocument } from "./documents.queries.js";
-import { createJob } from "../../jobs/jobs.queries.js";
+import { createJob, findJobById } from "../../jobs/jobs.queries.js";
 
 // funzione esportata per il caricamento di un documento
 // riceve: l'id dell'utente e il file di multer
@@ -51,4 +51,26 @@ export async function uploadDocument(userId, file) {
   } finally {
     client.release();
   }
+}
+
+export async function getJobStatus(jobId, userId) {
+  let job;
+  try {
+    job = await findJobById(jobId, userId);
+  } catch (error) {
+    if (error.code === "22P02") {
+      const err = new Error("Elaborazione non trovata");
+      err.status = 404;
+      throw err;
+    }
+    throw error;
+  }
+
+  if (!job) {
+    const err = new Error("Elaborazione non trovata");
+    err.status = 404;
+    throw err;
+  }
+
+  return job;
 }
