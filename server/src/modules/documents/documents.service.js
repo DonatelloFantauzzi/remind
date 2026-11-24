@@ -4,7 +4,7 @@
 import { createHash } from "node:crypto";
 import { extractText } from "./extract.js";
 import pool from "../../db/pool.js";
-import { createDocument } from "./documents.queries.js";
+import { createDocument, findDocumentsByUser } from "./documents.queries.js";
 import { createJob, findJobById } from "../../jobs/jobs.queries.js";
 
 // funzione esportata per il caricamento di un documento
@@ -73,4 +73,10 @@ export async function getJobStatus(jobId, userId) {
   }
 
   return job;
+}
+
+export async function getDocuments(userId) {
+  const documents = await findDocumentsByUser(userId);
+
+  return documents;
 }

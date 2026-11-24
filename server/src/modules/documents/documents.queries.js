@@ -44,3 +44,12 @@ export async function createChunk(
     [documentId, userId, chunkIndex, startOffset, endOffset, content],
   );
 }
+
+export async function findDocumentsByUser(userId) {
+  const result = await pool.query(
+    "SELECT d.id, d.filename, j.id AS job_id, j.status, j.progress, j.step, j.error_message FROM documents AS d JOIN jobs AS j ON j.document_id=d.id WHERE d.user_id=$1 ORDER BY d.filename",
+    [userId],
+  );
+
+  return result.rows;
+}

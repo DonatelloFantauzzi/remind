@@ -2,7 +2,11 @@
 import express from "express";
 import requireAuth from "../../middleware/requireAuth.js";
 import upload from "../../middleware/upload.js";
-import { getJobStatus, uploadDocument } from "./documents.service.js";
+import {
+  getDocuments,
+  getJobStatus,
+  uploadDocument,
+} from "./documents.service.js";
 
 // 2. Il router
 const routerDocuments = express.Router();
@@ -15,6 +19,12 @@ routerDocuments.post("/", requireAuth, upload, async (req, res) => {
   const result = await uploadDocument(req.userId, req.file);
 
   return res.status(201).json({ document: result });
+});
+
+routerDocuments.get("/", requireAuth, async (req, res) => {
+  const userId = req.userId;
+  const documents = await getDocuments(userId);
+  return res.status(200).json({ documents });
 });
 
 routerDocuments.get("/jobs/:jobId", requireAuth, async (req, res) => {
